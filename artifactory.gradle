@@ -1,0 +1,92 @@
+// Fetch Artifactory publishing plugin
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:4+'
+    }
+}
+
+// Apply plugins
+apply plugin: 'maven-publish'
+apply plugin: org.jfrog.gradle.plugin.artifactory.ArtifactoryPlugin
+
+// Determine which repositories to pull from and publish to
+def pullRelease  = 'libs-release'
+def pullSnapshot = 'libs-snapshot'
+def pushRelease  = 'libs-snapshot-webis-gradle'
+def pushSnapshot = 'libs-release-webis-gradle'
+
+if (project.ext.has("nonFree") && project.ext.get("nonFree")) {
+    pullRelease  += '-nonfree'
+    pullSnapshot += '-nonfree'
+    pushRelease  += '-nonfree'
+    pushSnapshot += '-nonfree'
+}
+
+repositories {
+    maven {
+        url = 'https://repo.webis.de/artifactory/' + pullRelease
+        credentials {
+            username = project.findProperty("artifactoryUsername") ?: ""
+            password = project.findProperty("artifactoryPassword") ?: ""
+        }
+    }
+    maven {
+        url = 'https://repo.webis.de/artifactory/' + pullSnapshot
+        credentials {
+            username = project.findProperty("artifactoryUsername") ?: ""
+            password = project.findProperty("artifactoryPassword") ?: ""
+        }
+    }
+}
+
+// Configure Artifactory remote
+artifactory {
+    contextUrl = "https://repo.webis.de/artifactory"
+    publish {
+        repository {
+            repoKey = version.endsWith('SNAPSHOT') ? pushRelease : pushSnapshot
+            username = project.findProperty("artifactoryUsername") ?: ""
+            password = project.findProperty("artifactoryPassword") ?: ""
+            maven = true
+        }
+        defaults {
+            publications('mavenJava')
+        }
+    }
+}
+
+// Create tasks for generating source and JavaDoc JARs
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+
+// Configure Maven Publishing Information
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            // Publish binary, source, and JavaDoc JARs
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+
+            // Set POM definition
+            if (project.ext.has("pomDef")) {
+                pom project.ext.get("pomDef")
+            }
+        }
+    }
+}

@@ -1,0 +1,53 @@
+// Apply plugins
+apply plugin: 'java'
+apply plugin: 'jacoco'
+apply plugin: 'application'
+
+// Basic configuration and settings for all (sub-)projects
+allprojects {
+    group = 'org.netspeak'
+    version = '1.0'
+    mainClassName = 'org.netspeak.usage.NetspeakTerminal'
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    // Set source file encoding
+    compileJava.options.encoding = "UTF-8"
+    compileTestJava.options.encoding = "UTF-8"
+    javadoc.options.encoding = 'UTF-8'
+
+    // Declare global dependencies
+    dependencies {
+        compile group: 'org.netspeak', name: 'netspeak4-application-java', version: '1.0'
+        compile group: 'org.apache.commons', name: 'commons-compress', version: '1.19'
+        
+        testImplementation 'junit:junit:4.12'
+    }
+
+    // Set MANIFEST.MF contents
+    jar {
+        manifest {
+            attributes('Main-Class': mainClassName)
+        }
+    }
+}
+
+// Set POM definition
+project.ext.pomDef = {
+    name = 'Netspeak 4 stuff'
+    description = 'An application with lots of miscellaneous functionality related to Netspeak 4'
+    url = 'http://netspeak.org'
+    //licenses {
+    //    license {
+    //        name = 'The Apache License, Version 2.0'
+    //        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    //    }
+    //}
+    organization {
+        name = 'Netspeak'
+        url = 'http://netspeak.org'
+    }
+}
+
+// Include Artifactory configuration
+apply from: 'artifactory.gradle'

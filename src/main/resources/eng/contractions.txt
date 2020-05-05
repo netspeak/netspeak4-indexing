@@ -1,0 +1,9 @@
+i'm
+(he|she|it)'s
+(you|we|they)'re
+
+(i|you|he|she|it|we|they)'(d|ll|ve)
+
+y'all
+
+(have|has|had|do|does|did|is|are|ai|was|were|wo|would|ca|could|sha|must|need)n't
