@@ -1,6 +1,5 @@
 // Apply plugins
 apply plugin: 'java'
-apply plugin: 'jacoco'
 apply plugin: 'application'
 
 // Basic configuration and settings for all (sub-)projects
@@ -20,7 +19,7 @@ allprojects {
     dependencies {
         compile group: 'org.netspeak', name: 'netspeak4-application-java', version: '1.0'
         compile group: 'org.apache.commons', name: 'commons-compress', version: '1.19'
-        
+
         testImplementation 'junit:junit:4.12'
     }
 
