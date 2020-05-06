@@ -173,8 +173,9 @@ public final class Util {
 		boolean result = matcher.find();
 		if (result) {
 			StringBuilder sb = new StringBuilder();
-			int last;
+			int last = 0;
 			do {
+				sb.append(string, last, matcher.start());
 				String replacement = replacer.apply(matcher);
 				sb.append(replacement);
 				last = matcher.end();
