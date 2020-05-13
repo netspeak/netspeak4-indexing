@@ -1,5 +1,7 @@
 # Netspeak 4 indexing
 
+[![Actions Status](https://github.com/netspeak/netspeak4-indexing/workflows/Java%20CI%20with%20Gradle/badge.svg)](https://github.com/netspeak/netspeak4-indexing/actions)
+
 This project contains all necessities to create a new Netspeak 4 index.
 
 This project is mainly intended for developers that want to build a new Netspeak 4 index from a given data set.
