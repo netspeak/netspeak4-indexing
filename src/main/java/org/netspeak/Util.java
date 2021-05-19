@@ -1,5 +1,7 @@
 package org.netspeak;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -27,8 +29,6 @@ import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static java.util.Objects.requireNonNull;
-
 public final class Util {
 
 	private Util() {
@@ -37,8 +37,8 @@ public final class Util {
 	/**
 	 * Deletes the given file or directory.
 	 * <p>
-	 * System links will not be followed. This will throw for non-empty directories. This operation will do nothing if
-	 * the given path does not exist.
+	 * System links will not be followed. This will throw for non-empty directories.
+	 * This operation will do nothing if the given path does not exist.
 	 *
 	 * @param dirOrFile
 	 * @throws IOException
@@ -50,8 +50,9 @@ public final class Util {
 	/**
 	 * Deletes the given file or directory (recursively).
 	 * <p>
-	 * System links will not be followed. This will throw for non-empty directories if not recursive. This operation
-	 * will do nothing if the given path does not exist.
+	 * System links will not be followed. This will throw for non-empty directories
+	 * if not recursive. This operation will do nothing if the given path does not
+	 * exist.
 	 *
 	 * @param dirOrFile
 	 * @throws IOException
@@ -91,8 +92,8 @@ public final class Util {
 	}
 
 	public static <T> List<T> getAll(Iterable<Future<T>> futures) throws InterruptedException, ExecutionException {
-		List<T> values = new ArrayList<>();
-		for (Future<T> f : futures) {
+		final List<T> values = new ArrayList<>();
+		for (final Future<T> f : futures) {
 			values.add(f.get());
 		}
 		return values;
@@ -107,14 +108,14 @@ public final class Util {
 	 */
 	public static Set<String> readWordList(Path path) throws IOException {
 		try (FileInputStream fileIn = new FileInputStream(path.toFile());
-		     Reader in = new InputStreamReader(fileIn, StandardCharsets.UTF_8)) {
+				Reader in = new InputStreamReader(fileIn, StandardCharsets.UTF_8)) {
 			return readWordList(in);
 		}
 	}
 
 	public static Set<String> readWordList(Reader in) throws IOException {
 		try (BufferedReader bufferedReader = new BufferedReader(in)) {
-			Set<String> set = new LinkedHashSet<>();
+			final Set<String> set = new LinkedHashSet<>();
 
 			bufferedReader.lines().forEach(word -> {
 				if (word == null || word.isEmpty())
@@ -136,7 +137,7 @@ public final class Util {
 
 	public static Set<String> readResourceWordList(String name) throws IOException {
 		try (InputStream input = Util.class.getResourceAsStream(name);
-		     Reader in = new InputStreamReader(input, StandardCharsets.UTF_8)) {
+				Reader in = new InputStreamReader(input, StandardCharsets.UTF_8)) {
 			return readWordList(in);
 		}
 	}
@@ -145,7 +146,7 @@ public final class Util {
 		if (words.length == 1)
 			return words[0];
 
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		sb.append(words[0]);
 
 		for (int i = 1; i < words.length; i++) {
@@ -156,10 +157,9 @@ public final class Util {
 		return sb.toString();
 	}
 
-
 	/**
-	 * Replaces all occurrences of the given pattern in the given string with the string returned by the replacer
-	 * function.
+	 * Replaces all occurrences of the given pattern in the given string with the
+	 * string returned by the replacer function.
 	 *
 	 * @param pattern
 	 * @param string
@@ -167,16 +167,16 @@ public final class Util {
 	 * @return
 	 */
 	public static String replaceAll(Pattern pattern, String string, Function<MatchResult, String> replacer) {
-		Matcher matcher = pattern.matcher(string);
+		final Matcher matcher = pattern.matcher(string);
 
 		requireNonNull(replacer);
 		boolean result = matcher.find();
 		if (result) {
-			StringBuilder sb = new StringBuilder();
+			final StringBuilder sb = new StringBuilder();
 			int last = 0;
 			do {
 				sb.append(string, last, matcher.start());
-				String replacement = replacer.apply(matcher);
+				final String replacement = replacer.apply(matcher);
 				sb.append(replacement);
 				last = matcher.end();
 				result = matcher.find();
@@ -187,7 +187,6 @@ public final class Util {
 		return string;
 	}
 
-
 	public interface ThrowsRunnable extends Runnable {
 
 		void runThrowing() throws Exception;
@@ -196,9 +195,9 @@ public final class Util {
 		default void run() {
 			try {
 				runThrowing();
-			} catch (RuntimeException e) {
+			} catch (final RuntimeException e) {
 				throw e;
-			} catch (Exception e) {
+			} catch (final Exception e) {
 				throw new RuntimeException(e);
 			}
 		}
@@ -212,9 +211,9 @@ public final class Util {
 		default void accept(T t) {
 			try {
 				acceptThrowing(t);
-			} catch (RuntimeException e) {
+			} catch (final RuntimeException e) {
 				throw e;
-			} catch (Exception e) {
+			} catch (final Exception e) {
 				throw new RuntimeException(e);
 			}
 		}
@@ -228,9 +227,9 @@ public final class Util {
 		default T get() {
 			try {
 				return getThrowing();
-			} catch (RuntimeException e) {
+			} catch (final RuntimeException e) {
 				throw e;
-			} catch (Exception e) {
+			} catch (final Exception e) {
 				throw new RuntimeException(e);
 			}
 		}

@@ -58,6 +58,30 @@ public final class PhraseMappers {
 		return PhraseMapper.rename((phrase, frequency) -> phrase.replace(" '", "'"));
 	}
 
+	// https://en.wikipedia.org/wiki/Hyphen#Unicode
+	private static final Pattern UNICODE_HYPHEN_APPTERN = Pattern.compile("[\u00ad\u2010\u2011]");
+
+	/**
+	 * Returns a new {@link PhraseMapper} that replaces all Unicode hyphen
+	 * characters with the ASCII hyphen.
+	 *
+	 */
+	public static PhraseMapper normalizeHyphens() {
+		return PhraseMapper.rename((phrase, frequency) -> UNICODE_HYPHEN_APPTERN.matcher(phrase).replaceAll("-"));
+	}
+
+	// https://en.wikipedia.org/wiki/Apostrophe
+	private static final Pattern UNICODE_APOSTROPHE_APPTERN = Pattern.compile("[\u2019\u02B9\u2032\u2035]");
+
+	/**
+	 * Returns a new {@link PhraseMapper} that replaces all Unicode apostrophe
+	 * characters with the ASCII hyphen.
+	 *
+	 */
+	public static PhraseMapper normalizeApostrophe() {
+		return PhraseMapper.rename((phrase, frequency) -> UNICODE_APOSTROPHE_APPTERN.matcher(phrase).replaceAll("'"));
+	}
+
 	/**
 	 * Returns a new {@link PhraseMapper} that removes phrases which contain at
 	 * least one word that is contained in a given blacklist vocabulary.
@@ -92,9 +116,9 @@ public final class PhraseMappers {
 	 */
 	public static PhraseMapper removeControlCharacters() {
 		return PhraseMapper.rename((phrase, freq) -> {
-			int l = phrase.length();
+			final int l = phrase.length();
 			for (int i = 0; i < l; i++) {
-				char c = phrase.charAt(i);
+				final char c = phrase.charAt(i);
 				if (c < ' ') // \x00 - \x1F
 					return null;
 				if (0x7F <= c && c <= 0x9F) // DEL, \x80 - \x9F
@@ -121,9 +145,7 @@ public final class PhraseMappers {
 	 * @return
 	 */
 	public static PhraseMapper blacklist(final Collection<String> words, int repeat) {
-		HashSet<String> tempBlacklist = new HashSet<>();
-		tempBlacklist.addAll(words);
-
+		HashSet<String> tempBlacklist = new HashSet<>(words);
 		// just to be safe
 		tempBlacklist.remove(null);
 		tempBlacklist.remove("");
@@ -139,14 +161,14 @@ public final class PhraseMappers {
 	}
 
 	private static List<String> getAllCombinations(Collection<String> words, int repeat) {
-		ArrayList<String> combinations = new ArrayList<>((int) Math.pow(words.size(), repeat));
+		final ArrayList<String> combinations = new ArrayList<>((int) Math.pow(words.size(), repeat));
 		combinations.addAll(words);
 
 		int start = 0;
 		for (; repeat > 1; repeat--) {
-			int size = combinations.size();
+			final int size = combinations.size();
 			for (int i = start; i < size; i++) {
-				for (String word : words) {
+				for (final String word : words) {
 					combinations.add(combinations.get(i) + word);
 				}
 			}
@@ -165,7 +187,7 @@ public final class PhraseMappers {
 	 */
 	public static PhraseMapper whitelist(final Iterable<String> words) {
 		final Set<String> whitelist = new HashSet<>();
-		for (String word : words)
+		for (final String word : words)
 			whitelist.add(word);
 
 		return PhraseMapper.rename(filterByWords(whitelist::contains));
@@ -180,7 +202,7 @@ public final class PhraseMappers {
 	 */
 	public static PhraseMapper filterByWords(final Predicate<String> wordPredicate) {
 		return PhraseMapper.rename((phrase, frequency) -> {
-			for (String word : phrase.split(" ")) {
+			for (final String word : phrase.split(" ")) {
 				if (!wordPredicate.test(word)) {
 					return null;
 				}
@@ -201,9 +223,9 @@ public final class PhraseMappers {
 	 * @return
 	 */
 	public static PhraseMapper superBlacklist(final Iterable<String> strings) {
-		StringMatcherNode matcher = StringMatcherNode.createRoot(strings);
+		final StringMatcherNode matcher = StringMatcherNode.createRoot(strings);
 		return PhraseMapper.rename((phrase, freq) -> {
-			int l = phrase.length();
+			final int l = phrase.length();
 			for (int i = 0; i < l; i++) {
 				if (matcher.matches(phrase, i)) {
 					return null;
@@ -228,12 +250,12 @@ public final class PhraseMappers {
 				return true;
 
 			StringMatcherNode node = this;
-			int length = s.length();
+			final int length = s.length();
 			for (int i = index; i < length; i++) {
 				if (node == ACCEPT)
 					return true;
 
-				int c = s.charAt(i);
+				final int c = s.charAt(i);
 				node = node.next[c];
 				if (node == null)
 					return false;
@@ -244,14 +266,14 @@ public final class PhraseMappers {
 		public static StringMatcherNode createRoot(final Iterable<String> words) {
 			final StringMatcherNode root = new StringMatcherNode(false);
 
-			for (String word : words) {
-				int length = word.length();
+			for (final String word : words) {
+				final int length = word.length();
 				if (length == 0)
 					return ACCEPT;
 
 				StringMatcherNode node = root;
 				for (int i = 0; i < length; i++) {
-					int c = word.charAt(i);
+					final int c = word.charAt(i);
 					if (i + 1 == length) {
 						node.next[c] = ACCEPT;
 					} else {
@@ -313,7 +335,7 @@ public final class PhraseMappers {
 	 */
 	public static PhraseMapper removeURLsAndEmails() {
 		return PhraseMapper.rename((phrase, frequency) -> {
-			String lower = phrase.toLowerCase();
+			final String lower = phrase.toLowerCase();
 
 			// check for Email addresses
 			if (EMAIL_PATTERN.matcher(lower).find())
@@ -343,7 +365,7 @@ public final class PhraseMappers {
 	 */
 	public static PhraseMapper removeFileNames() {
 		return PhraseMapper.rename((phrase, frequency) -> {
-			String lower = phrase.toLowerCase();
+			final String lower = phrase.toLowerCase();
 
 			if (FILE_NAME_PATTERN.matcher(lower).find())
 				return null;
@@ -379,10 +401,10 @@ public final class PhraseMappers {
 	 */
 	public static PhraseMapper splitSurroundingCommas() {
 		return PhraseMapper.rename((phrase, freq) -> {
-			String[] words = phrase.split(" ");
+			final String[] words = phrase.split(" ");
 			for (int i = 0; i < words.length; i++) {
 				String word = words[i];
-				int l = word.length();
+				final int l = word.length();
 				if (l > 1 && (word.charAt(0) == ',' || word.charAt(l - 1) == ',')) {
 					if (word.contentEquals(",,")) {
 						words[i] = ", ,";
@@ -418,7 +440,7 @@ public final class PhraseMappers {
 	public static PhraseMapper maxNGram(int n) {
 		return PhraseMapper.rename((phrase, freq) -> {
 			int words = 1;
-			int l = phrase.length();
+			final int l = phrase.length();
 			for (int i = 0; i < l; i++) {
 				if (phrase.charAt(i) == ' ')
 					words++;

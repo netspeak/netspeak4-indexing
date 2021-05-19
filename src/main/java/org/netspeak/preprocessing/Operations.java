@@ -18,7 +18,7 @@ public abstract class Operations {
 	public static PipelineItem standardOperations(Path output, StandardOperationsOptions operationOptions,
 			PreprocessingOptions options) {
 		return source -> {
-			List<PhraseMapper> mappers = new ArrayList<>();
+			final List<PhraseMapper> mappers = new ArrayList<>();
 
 			// try to remove as much junk as possible
 			// In this phase, phrases will only be removed and not altered.
@@ -32,6 +32,8 @@ public abstract class Operations {
 			mappers.add(PhraseMappers.removeFileNames());
 
 			// Normalization phase
+			mappers.add(PhraseMappers.normalizeApostrophe());
+			mappers.add(PhraseMappers.normalizeHyphens());
 			mappers.add(PhraseMappers.explodeCommas());
 			mappers.add(PhraseMappers.removeLeadingDoubleQuote());
 			mappers.add(PhraseMappers.joinWordsWithLeadingApostrophe());
@@ -124,13 +126,13 @@ public abstract class Operations {
 	 */
 	public static PipelineItem moveTo(Path output) {
 		return source -> {
-			Path dest = output.toAbsolutePath();
+			final Path dest = output.toAbsolutePath();
 			System.out.println("Moving to " + dest);
 			System.out.println("From:");
 			System.out.println(source);
 
 			Util.createEmptyDirectory(dest);
-			List<PhraseSource> newSources = new ArrayList<>();
+			final List<PhraseSource> newSources = new ArrayList<>();
 			moveTo(newSources, source, dest);
 
 			System.out.println("Done.");
@@ -155,17 +157,17 @@ public abstract class Operations {
 
 	private static void moveTo(List<PhraseSource> out, PhraseSource source, Path dest) throws Exception {
 		if (source instanceof PhraseSource.Combined) {
-			for (PhraseSource s : ((PhraseSource.Combined) source).getSources()) {
+			for (final PhraseSource s : ((PhraseSource.Combined) source).getSources()) {
 				moveTo(out, s, dest);
 			}
 		} else if (source instanceof SimplePhraseSource) {
-			SimplePhraseSource simple = (SimplePhraseSource) source;
+			final SimplePhraseSource simple = (SimplePhraseSource) source;
 			// actually move some files
-			for (PhraseSource.File file : simple.getFiles()) {
+			for (final PhraseSource.File file : simple.getFiles()) {
 				Files.move(file.getPath(), dest.resolve(file.getPath().getFileName()));
 			}
 
-			SimplePhraseSource newSource = new SimplePhraseSource(dest);
+			final SimplePhraseSource newSource = new SimplePhraseSource(dest);
 			newSource.setReaderFactory(simple.readerFactory);
 			out.add(newSource);
 		} else {
@@ -186,7 +188,7 @@ public abstract class Operations {
 			System.out.println("Deleting:");
 			System.out.println(source);
 
-			for (PhraseSource.File file : source.getFiles()) {
+			for (final PhraseSource.File file : source.getFiles()) {
 				Files.delete(file.getPath());
 			}
 
