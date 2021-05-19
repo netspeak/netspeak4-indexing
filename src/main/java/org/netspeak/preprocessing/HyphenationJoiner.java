@@ -1,7 +1,6 @@
 package org.netspeak.preprocessing;
 
-import org.netspeak.Util;
-import org.netspeak.Util.ThrowsConsumer;
+import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -11,17 +10,19 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Pattern;
 
-import static java.util.Objects.requireNonNull;
+import org.netspeak.Util;
+import org.netspeak.Util.ThrowsConsumer;
 
 /**
  * This will join all hyphenated words in two phases.
  * <p>
- * In the first pass it will iterate over all input phrases and extract the vocabulary and stop words. This will be done
- * according to the given options.
+ * In the first pass it will iterate over all input phrases and extract the
+ * vocabulary and stop words. This will be done according to the given options.
  * <p>
- * The second phase is specific to the joiner set. Generally, it will try to normalize and, where possible, join
- * hyphenated words.
+ * The second phase is specific to the joiner set. Generally, it will try to
+ * normalize and, where possible, join hyphenated words.
  *
  * @see German
  */
@@ -43,15 +44,17 @@ public class HyphenationJoiner implements PipelineItem {
 	/**
 	 * Sets an optional log file.
 	 * <p>
-	 * Every action the method takes will be logged here in order where each line is one operation. The result and the
-	 * reason for not joining will be in the following format:
+	 * Every action the method takes will be logged here in order where each line is
+	 * one operation. The result and the reason for not joining will be in the
+	 * following format:
 	 *
 	 * <pre>
 	 * {action}:[ {result}:] {phrase}
 	 * </pre>
 	 * <p>
-	 * The actions are and results are implementation defined and might be different for each language specific joiner.
-	 * See the implementation of the current joiner for more information.
+	 * The actions are and results are implementation defined and might be different
+	 * for each language specific joiner. See the implementation of the current
+	 * joiner for more information.
 	 */
 	public void setLogger(Path logFile) {
 		this.logFile = logFile;
@@ -76,7 +79,7 @@ public class HyphenationJoiner implements PipelineItem {
 				vocabularyConsumer.accept(vocabExtractor);
 			}
 
-			Set<String> vocabulary = vocabExtractor.getVocabulary();
+			final Set<String> vocabulary = vocabExtractor.getVocabulary();
 			vocabExtractor = null;
 			System.gc();
 
@@ -86,9 +89,10 @@ public class HyphenationJoiner implements PipelineItem {
 		System.out.println("Joining Hyphenations...");
 		options.setMergeDuplicates(true); // this operation is going to create duplicates
 
-		// We use Java 8, so we have to give it a charset name, so it can lookup the charset instance. In never version
+		// We use Java 8, so we have to give it a charset name, so it can lookup the
+		// charset instance. In never version
 		// you can give it an instance directly.
-		String charsetName = StandardCharsets.UTF_8.name();
+		final String charsetName = StandardCharsets.UTF_8.name();
 		final PrintStream logger = logFile == null ? null : new PrintStream(logFile.toFile(), charsetName);
 		try {
 			joiner.setLogger(logger);
@@ -115,7 +119,8 @@ public class HyphenationJoiner implements PipelineItem {
 
 	public static class German implements JoinerFactory {
 		/**
-		 * The top k words from the vocabulary will be treated as stop words. This will set the k.
+		 * The top k words from the vocabulary will be treated as stop words. This will
+		 * set the k.
 		 */
 		int stopWordsTopK = 100;
 		/**
@@ -148,7 +153,7 @@ public class HyphenationJoiner implements PipelineItem {
 		private final German options;
 
 		private Set<String> vocabulary;
-		private Set<String> stopWords = new HashSet<>();
+		private final Set<String> stopWords = new HashSet<>();
 
 		private PrintStream logger;
 
@@ -187,11 +192,11 @@ public class HyphenationJoiner implements PipelineItem {
 			if (toRemove == 0)
 				return words;
 
-			String[] newWords = new String[words.length - toRemove];
+			final String[] newWords = new String[words.length - toRemove];
 			newWords[0] = words[0];
 			int writeIndex = 1;
 			for (int i = 1; i < words.length; i++) {
-				String word = words[i];
+				final String word = words[i];
 				if ("-".contentEquals(words[i])) {
 					newWords[writeIndex - 1] = newWords[writeIndex - 1] + "-";
 				} else {
@@ -213,8 +218,8 @@ public class HyphenationJoiner implements PipelineItem {
 			 */
 
 			for (int i = 0; i < words.length - 1; i++) {
-				String word = words[i];
-				String next = words[i + 1];
+				final String word = words[i];
+				final String next = words[i + 1];
 				if (word.length() > 1 && word.charAt(word.length() - 1) == '-') {
 
 					// if the next word is a stop word, we leave it as is.
@@ -236,7 +241,7 @@ public class HyphenationJoiner implements PipelineItem {
 					 */
 
 					if (Character.isLowerCase(next.charAt(0))) {
-						String concat = word.substring(0, word.length() - 1) + next;
+						final String concat = word.substring(0, word.length() - 1) + next;
 						if (vocabulary.contains(concat)) {
 							result = concat;
 							if (logger != null) {
@@ -295,14 +300,51 @@ public class HyphenationJoiner implements PipelineItem {
 
 		@Override
 		public String map(String phrase, long frequency) {
-			if (phrase.indexOf(" - ") == -1)
+			if (phrase.indexOf("-") == -1)
 				return phrase;
 
-			String newPhrase = phrase.replace(" - ", "-");
-			if (logger != null) {
-				logger.println("Join: " + newPhrase + ": " + phrase);
+			// The first replacement done by this mapper is to replace " - " with "-".
+			// This means that e.g. "foo - bar" will be mapped to "foo-bar".
+			// Since the dataset will likely contain transitive sub-n-grams as well, all
+			// phrases that start or end with the word "-" will be removed, e.g. "foo -".
+			//
+			// Another replacement is to join words like this: "foo- bar" -> "foo-bar".
+			// This pattern is relatively common. The only exception here are phrases
+			// like "pre- and post-war-period writing".
+
+			if (phrase.startsWith("- ") || phrase.endsWith(" -")) {
+				if (logger != null) {
+					logger.println("Removed: " + phrase);
+				}
+
+				return null;
 			}
 
+			// e.g. "foo - bar" -> "foo-bar"
+			phrase = joinThreeWords(phrase);
+
+			// e.g. "foo- bar" -> "foo-bar"
+			phrase = joinTwoWords(phrase);
+
+			return phrase;
+		}
+
+		private String joinThreeWords(String phrase) {
+			final String newPhrase = phrase.replace(" - ", "-");
+			if (logger != null && !phrase.equals(newPhrase)) {
+				logger.println("Join 3: " + newPhrase + ": " + phrase);
+			}
+			return newPhrase;
+		}
+
+		private static final Pattern WORD_JOIN_PATTERN = Pattern.compile("(?<=[a-z])- (?!and\\b|or\\b)(?=[a-z])",
+				Pattern.CASE_INSENSITIVE);
+
+		private String joinTwoWords(String phrase) {
+			final String newPhrase = WORD_JOIN_PATTERN.matcher(phrase).replaceAll("-");
+			if (logger != null && !phrase.equals(newPhrase)) {
+				logger.println("Join 2: " + newPhrase + ": " + phrase);
+			}
 			return newPhrase;
 		}
 
@@ -310,16 +352,16 @@ public class HyphenationJoiner implements PipelineItem {
 
 	private static String[] removeNull(String[] words) {
 		int nullEntries = 0;
-		for (String word : words)
+		for (final String word : words)
 			if (word == null)
 				nullEntries++;
 
 		if (nullEntries == 0)
 			return words;
 
-		String[] newWords = new String[words.length - nullEntries];
+		final String[] newWords = new String[words.length - nullEntries];
 		int writeIndex = 0;
-		for (String w : words) {
+		for (final String w : words) {
 			if (w != null)
 				newWords[writeIndex++] = w;
 		}
@@ -327,7 +369,7 @@ public class HyphenationJoiner implements PipelineItem {
 	}
 
 	private static <T> void addTopK(Collection<T> consumer, Collection<T> supplier, int k) {
-		for (T item : supplier) {
+		for (final T item : supplier) {
 			if (k-- <= 0)
 				break;
 			consumer.add(item);
