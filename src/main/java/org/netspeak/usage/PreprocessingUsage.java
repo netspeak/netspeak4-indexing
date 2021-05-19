@@ -57,36 +57,36 @@ public class PreprocessingUsage {
 	 * @throws Exception
 	 */
 	static void processGerman(PhraseSource source, Path outDir) throws Exception {
-		Pipeline pipeline = new Pipeline();
+		final Pipeline pipeline = new Pipeline();
 
 		pipeline.add(() -> {
-			Path output = temp1;
+			final Path output = temp1;
 
-			StandardOperationsOptions operationOptions = new StandardOperationsOptions();
-			operationOptions.setSuperBlacklist(Util.readResourceWordList("super-blacklist.txt"));
-			operationOptions.setBlacklist(Util.readResourceWordList("blacklist.txt"));
+			final StandardOperationsOptions operationOptions = new StandardOperationsOptions();
+			operationOptions.setSuperBlacklist(Util.readResourceWordList("/super-blacklist.txt"));
+			operationOptions.setBlacklist(Util.readResourceWordList("/blacklist.txt"));
 			operationOptions.setBlacklistCombinations(4);
 			operationOptions.setMaxNGram(5);
 			operationOptions.setToLowerCase(false);
 
 			operationOptions.getAdditionalMappers()
-					.add(new ContractionMapper(Util.readResourceWordList("eng/contractions.txt")));
+					.add(new ContractionMapper(Util.readResourceWordList("/eng/contractions.txt")));
 
-			PreprocessingOptions options = new PreprocessingOptions();
+			final PreprocessingOptions options = new PreprocessingOptions();
 			options.setParallelDegree(8);
 
 			return Operations.standardOperations(output, operationOptions, options);
 		});
 
 		pipeline.add(() -> {
-			Path output = temp2;
+			final Path output = temp2;
 
-			PreprocessingOptions options = new PreprocessingOptions();
+			final PreprocessingOptions options = new PreprocessingOptions();
 			options.setParallelDegree(8);
 			options.setDeleteSource(DeleteMode.PROGRESSIVE); // delete files from temp
 
-			HyphenationJoiner.German german = new HyphenationJoiner.German();
-			german.setStopWordList(Util.readResourceWordList("ger/stop-words.txt"));
+			final HyphenationJoiner.German german = new HyphenationJoiner.German();
+			german.setStopWordList(Util.readResourceWordList("/ger/stop-words.txt"));
 
 			return new HyphenationJoiner(german, output, options);
 		});
@@ -97,32 +97,32 @@ public class PreprocessingUsage {
 	}
 
 	static void processEnglish(PhraseSource source, Path outDir) throws Exception {
-		Pipeline pipeline = new Pipeline();
+		final Pipeline pipeline = new Pipeline();
 
 		pipeline.add(() -> {
-			Path output = temp1;
+			final Path output = temp1;
 
-			StandardOperationsOptions operationOptions = new StandardOperationsOptions();
-			operationOptions.setSuperBlacklist(Util.readResourceWordList("super-blacklist.txt"));
-			operationOptions.setBlacklist(Util.readResourceWordList("blacklist.txt"));
+			final StandardOperationsOptions operationOptions = new StandardOperationsOptions();
+			operationOptions.setSuperBlacklist(Util.readResourceWordList("/super-blacklist.txt"));
+			operationOptions.setBlacklist(Util.readResourceWordList("/blacklist.txt"));
 			operationOptions.setBlacklistCombinations(4);
 			operationOptions.setMaxNGram(5);
-			operationOptions.setToLowerCase(false);
+			operationOptions.setToLowerCase(true);
 
-			PreprocessingOptions options = new PreprocessingOptions();
+			final PreprocessingOptions options = new PreprocessingOptions();
 			options.setParallelDegree(8);
 
 			return Operations.standardOperations(output, operationOptions, options);
 		});
 
 		pipeline.add(() -> {
-			Path output = temp2;
+			final Path output = temp2;
 
-			PreprocessingOptions options = new PreprocessingOptions();
+			final PreprocessingOptions options = new PreprocessingOptions();
 			options.setParallelDegree(8);
 			options.setDeleteSource(DeleteMode.PROGRESSIVE); // delete files from temp
 
-			HyphenationJoiner.English english = new HyphenationJoiner.English();
+			final HyphenationJoiner.English english = new HyphenationJoiner.English();
 
 			return new HyphenationJoiner(english, output, options);
 		});
@@ -133,12 +133,12 @@ public class PreprocessingUsage {
 	}
 
 	static void toLowerCase(PhraseSource source, Path outDir) throws Exception {
-		Pipeline pipeline = new Pipeline();
+		final Pipeline pipeline = new Pipeline();
 
 		pipeline.add(inputSource -> {
-			Path output = temp2;
+			final Path output = temp2;
 
-			PreprocessingOptions options = new PreprocessingOptions();
+			final PreprocessingOptions options = new PreprocessingOptions();
 			options.setParallelDegree(8);
 
 			return Preprocessing.process(inputSource, output, Arrays.asList(PhraseMappers.toLowerCase()), options);
