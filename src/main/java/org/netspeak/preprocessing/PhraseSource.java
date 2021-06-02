@@ -25,6 +25,12 @@ public interface PhraseSource {
 
 	}
 
+	public interface MovableFile extends File {
+
+		void move(Path to) throws Exception;
+
+	}
+
 	PhraseSource EMPTY = combine();
 
 	/**
@@ -45,17 +51,12 @@ public interface PhraseSource {
 	 */
 	static PhraseSource combine(Collection<PhraseSource> sources) {
 		final ArrayList<PhraseSource> src = new ArrayList<>(sources);
-		return new Combined() {
-
-			@Override
-			public Collection<PhraseSource> getSources() {
-				return src;
-			}
+		return new PhraseSource() {
 
 			@Override
 			public Collection<File> getFiles() throws Exception {
-				List<File> files = new ArrayList<>();
-				for (PhraseSource source : src) {
+				final List<File> files = new ArrayList<>();
+				for (final PhraseSource source : src) {
 					files.addAll(source.getFiles());
 				}
 				return files;
@@ -63,9 +64,9 @@ public interface PhraseSource {
 
 			@Override
 			public String toString() {
-				StringBuilder sb = new StringBuilder();
+				final StringBuilder sb = new StringBuilder();
 				boolean first = true;
-				for (PhraseSource source : src) {
+				for (final PhraseSource source : src) {
 					if (first) {
 						first = false;
 					} else {
@@ -78,10 +79,41 @@ public interface PhraseSource {
 		};
 	}
 
-	interface Combined extends PhraseSource {
+	/**
+	 * Returns a phrase source which contains all the given files.
+	 *
+	 * @param files
+	 * @return
+	 */
+	static PhraseSource fromFiles(File... files) {
+		return fromFiles(Arrays.asList(files));
+	}
 
-		Collection<PhraseSource> getSources();
+	/**
+	 * Returns a phrase source which contains all the given files.
+	 *
+	 * @param files
+	 * @return
+	 */
+	static PhraseSource fromFiles(Collection<File> files) {
+		final ArrayList<File> f = new ArrayList<>(files);
 
+		return new PhraseSource() {
+
+			@Override
+			public Collection<File> getFiles() throws Exception {
+				return f;
+			}
+
+			@Override
+			public String toString() {
+				final StringBuilder sb = new StringBuilder("Files:");
+				for (final File file : f) {
+					sb.append(file.getPath().toString());
+				}
+				return sb.toString();
+			}
+		};
 	}
 
 }

@@ -6,6 +6,7 @@ import java.util.function.BiConsumer;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.netspeak.preprocessing.mappers.ContractionMapper;
 
 public class ContractionMapperTest {
 

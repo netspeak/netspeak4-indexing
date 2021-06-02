@@ -6,7 +6,7 @@ apply plugin: 'application'
 allprojects {
     group = 'org.netspeak'
     version = '1.0'
-    mainClassName = 'org.netspeak.usage.NetspeakTerminal'
+    mainClassName = 'org.netspeak.usage.Cli'
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
 
@@ -17,8 +17,9 @@ allprojects {
 
     // Declare global dependencies
     dependencies {
-        compile group: 'org.netspeak', name: 'netspeak4-application-java', version: '1.0'
-        compile group: 'org.apache.commons', name: 'commons-compress', version: '1.19'
+        implementation group: 'org.apache.commons', name: 'commons-compress', version: '1.19'
+        implementation 'info.picocli:picocli:4.5.2'
+        
 
         testImplementation 'junit:junit:4.12'
     }
@@ -33,9 +34,9 @@ allprojects {
 
 // Set POM definition
 project.ext.pomDef = {
-    name = 'Netspeak 4 stuff'
+    name = 'Netspeak 4 indexing'
     description = 'An application with lots of miscellaneous functionality related to Netspeak 4'
-    url = 'http://netspeak.org'
+    url = 'https://netspeak.org'
     //licenses {
     //    license {
     //        name = 'The Apache License, Version 2.0'
@@ -44,7 +45,7 @@ project.ext.pomDef = {
     //}
     organization {
         name = 'Netspeak'
-        url = 'http://netspeak.org'
+        url = 'https://netspeak.org'
     }
 }
 

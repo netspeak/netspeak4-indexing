@@ -1,4 +1,4 @@
-package org.netspeak.preprocessing;
+package org.netspeak.preprocessing.items;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -6,9 +6,18 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.netspeak.Util;
+import org.netspeak.preprocessing.PhraseMapper;
+import org.netspeak.preprocessing.PhraseSource;
+import org.netspeak.preprocessing.PipelineItem;
+import org.netspeak.preprocessing.Preprocessing;
+import org.netspeak.preprocessing.PreprocessingOptions;
+import org.netspeak.preprocessing.mappers.PhraseMappers;
 
 public abstract class Operations {
 
@@ -52,9 +61,6 @@ public abstract class Operations {
 			if (operationOptions.additionalMappers != null) {
 				mappers.addAll(operationOptions.additionalMappers);
 			}
-
-			// the above operations are going to produce duplicates
-			options.setMergeDuplicates(true);
 
 			return Preprocessing.process(source, output, mappers, options);
 		};
@@ -132,16 +138,11 @@ public abstract class Operations {
 			System.out.println(source);
 
 			Util.createEmptyDirectory(dest);
-			final List<PhraseSource> newSources = new ArrayList<>();
-			moveTo(newSources, source, dest);
+			final PhraseSource result = moveTo(source, dest);
 
 			System.out.println("Done.");
 
-			if (newSources.size() == 1) {
-				return newSources.get(0);
-			} else {
-				return PhraseSource.combine(newSources);
-			}
+			return result;
 		};
 	}
 
@@ -155,25 +156,44 @@ public abstract class Operations {
 		return moveTo(Paths.get(output));
 	}
 
-	private static void moveTo(List<PhraseSource> out, PhraseSource source, Path dest) throws Exception {
-		if (source instanceof PhraseSource.Combined) {
-			for (final PhraseSource s : ((PhraseSource.Combined) source).getSources()) {
-				moveTo(out, s, dest);
+	private static PhraseSource moveTo(PhraseSource source, Path dest) throws Exception {
+		final Set<String> names = new HashSet<>();
+		boolean containsDuplicateNames = false;
+		final List<PhraseSource.MovableFile> files = new ArrayList<>();
+
+		for (final PhraseSource.File file : source.getFiles()) {
+			if (file instanceof PhraseSource.MovableFile) {
+				files.add((PhraseSource.MovableFile) file);
+
+				if (!containsDuplicateNames) {
+					final String name = file.getPath().getFileName().toString();
+					if (names.contains(name)) {
+						containsDuplicateNames = true;
+					} else {
+						names.add(name);
+					}
+				}
+			} else {
+				throw new Exception("File not movable: " + file.getPath().toString());
 			}
-		} else if (source instanceof SimplePhraseSource) {
-			final SimplePhraseSource simple = (SimplePhraseSource) source;
-			// actually move some files
-			for (final PhraseSource.File file : simple.getFiles()) {
-				Files.move(file.getPath(), dest.resolve(file.getPath().getFileName()));
+		}
+
+		int counter = 0;
+		for (final PhraseSource.MovableFile file : files) {
+			final int percent = counter * 100 / files.size();
+			final String prefix = "[" + new Date() + "][" + percent + "% " + counter + "/" + files.size() + "] ";
+			System.out.println(prefix + "Moving " + file.getPath().toString());
+
+			String name = file.getPath().getFileName().toString();
+			if (containsDuplicateNames) {
+				name = counter + "-" + name;
 			}
 
-			final SimplePhraseSource newSource = new SimplePhraseSource(dest);
-			newSource.setReaderFactory(simple.readerFactory);
-			out.add(newSource);
-		} else {
-			throw new UnsupportedOperationException(
-					"Cannot move files of unknown source class " + source.getClass().getName());
+			file.move(dest.resolve(name));
+			counter++;
 		}
+
+		return PhraseSource.fromFiles(new ArrayList<PhraseSource.File>(files));
 	}
 
 	/**

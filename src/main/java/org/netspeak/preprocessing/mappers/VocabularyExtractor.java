@@ -1,4 +1,4 @@
-package org.netspeak.preprocessing;
+package org.netspeak.preprocessing.mappers;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -17,6 +17,7 @@ import java.util.function.Function;
 import org.netspeak.io.PhraseFrequencyPair;
 import org.netspeak.io.PhraseWriter;
 import org.netspeak.io.SimpleCsvWriter;
+import org.netspeak.preprocessing.PhraseMapper;
 
 /**
  * A phrase mapper that will create a vocabulary from all phrases it sees.

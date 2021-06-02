@@ -1,4 +1,4 @@
-package org.netspeak.preprocessing;
+package org.netspeak.preprocessing.mappers;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+
+import org.netspeak.preprocessing.PhraseMapper;
+import org.netspeak.preprocessing.Preprocessing;
 
 /**
  * Some common {@link PhraseMapper} to be used in {@link Preprocessing}.

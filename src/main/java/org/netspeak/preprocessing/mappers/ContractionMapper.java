@@ -1,6 +1,7 @@
-package org.netspeak.preprocessing;
+package org.netspeak.preprocessing.mappers;
 
 import org.netspeak.Util;
+import org.netspeak.preprocessing.PhraseMapper;
 
 import java.io.IOException;
 import java.nio.file.Path;

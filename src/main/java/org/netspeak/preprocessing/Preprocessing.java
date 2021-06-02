@@ -9,6 +9,7 @@ import org.netspeak.io.SimpleCsvReader;
 import org.netspeak.io.SimpleCsvWriter;
 import org.netspeak.io.SplitterCsvWriter;
 import org.netspeak.preprocessing.PreprocessingOptions.DeleteMode;
+import org.netspeak.preprocessing.mappers.PhraseMappers;
 
 import java.io.IOException;
 import java.math.BigDecimal;

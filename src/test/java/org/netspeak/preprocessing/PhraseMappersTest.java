@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.Test;
+import org.netspeak.preprocessing.mappers.PhraseMappers;
 
 public class PhraseMappersTest {
 

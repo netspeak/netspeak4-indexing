@@ -1,4 +1,4 @@
-package org.netspeak.preprocessing;
+package org.netspeak.preprocessing.items;
 
 import static java.util.Objects.requireNonNull;
 
@@ -14,6 +14,12 @@ import java.util.regex.Pattern;
 
 import org.netspeak.Util;
 import org.netspeak.Util.ThrowsConsumer;
+import org.netspeak.preprocessing.PhraseMapper;
+import org.netspeak.preprocessing.PhraseSource;
+import org.netspeak.preprocessing.PipelineItem;
+import org.netspeak.preprocessing.Preprocessing;
+import org.netspeak.preprocessing.PreprocessingOptions;
+import org.netspeak.preprocessing.mappers.VocabularyExtractor;
 
 /**
  * This will join all hyphenated words in two phases.
@@ -87,7 +93,6 @@ public class HyphenationJoiner implements PipelineItem {
 		}
 
 		System.out.println("Joining Hyphenations...");
-		options.setMergeDuplicates(true); // this operation is going to create duplicates
 
 		// We use Java 8, so we have to give it a charset name, so it can lookup the
 		// charset instance. In never version
