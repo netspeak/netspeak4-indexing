@@ -31,10 +31,10 @@ particular, ensure the single `\t` delimiter between n-gram and frequency.
 
 ## Contributors
 
-Michael Schmidt (2018 - 2020)
+Michael Schmidt (2018 - 2021)
 
 Martin Trenkmann (2008 - 2013)
 
-Martin Potthast (2008 - 2020)
+Martin Potthast (2008 - 2021)
 
-Benno Stein (2008 - 2020)
+Benno Stein (2008 - 2021)
