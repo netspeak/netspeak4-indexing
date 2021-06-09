@@ -31,7 +31,12 @@ import picocli.CommandLine.Option;
 		"A CLI for the Netspeak 4 data preporcessing and indexing process." }, optionListHeading = "%nOptions:%n", mixinStandardHelpOptions = true)
 public class Cli implements Runnable {
 
-	@Option(names = { "-c", "--config" }, description = { "The path of a config file to pass" })
+	@Option(names = { "-c", "--config" }, description = { "The path of a `.properties` config file.",
+			"The keys of the file are interpreeted as long-name arguments passed to the CLI (unknown arguments will be ignored)."
+					+ " This means that the CLI can be used by simply passing in a config file."
+					+ " Note: If an argument is defined in the config file and passed explicitly to the CLI, the CLI argument will be used.",
+			"To pass in multiple input paths, separate the paths using a semicolon (';')."
+					+ " Leading and trailing spaces around paths will be removed." })
 	Path config;
 
 	@Option(names = { "-l", "--lang" }, description = { "The language of the data set(s) to process.",
