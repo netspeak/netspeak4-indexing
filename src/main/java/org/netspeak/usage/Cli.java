@@ -247,7 +247,7 @@ public class Cli implements Runnable {
 
 		// Hint for devs: You can replace `args` with string arguments.
 		// E.g. `"--input", "../baz", "-o=./out"`.
-		final int exitCode = cli.execute("--config", "C:\\Netspeak\\foo.properties", "--parallel=8");
+		final int exitCode = cli.execute(args);
 
 		System.exit(exitCode);
 	}
