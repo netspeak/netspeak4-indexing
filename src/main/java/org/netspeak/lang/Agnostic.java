@@ -47,7 +47,7 @@ public class Agnostic implements Processor {
 			pipeline.add(inputSource -> {
 				final PreprocessingOptions options = new PreprocessingOptions();
 				options.setParallelDegree(config.parallelDegree);
-				options.setMergeDuplicates(true);
+				options.setMergeDuplicates(config.mergeDuplicates);
 
 				final List<PhraseMapper> mappers = new ArrayList<>();
 				if (config.maxNGram < Integer.MAX_VALUE) {

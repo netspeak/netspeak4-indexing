@@ -15,6 +15,7 @@ public final class Config {
 	public int parallelDegree = 1;
 	public int maxNGram = Integer.MAX_VALUE;
 	public boolean lowercase = false;
+	public boolean mergeDuplicates = true;
 
 	public Config(PhraseSource source, Path output, Path temp) {
 		this.source = requireNonNull(source);

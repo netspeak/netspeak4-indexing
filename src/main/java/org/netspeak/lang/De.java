@@ -50,7 +50,7 @@ public class De implements Processor {
 
 				final PreprocessingOptions options = new PreprocessingOptions();
 				options.setParallelDegree(config.parallelDegree);
-				options.setMergeDuplicates(true);
+				options.setMergeDuplicates(config.mergeDuplicates);
 
 				return Operations.standardOperations(output, operationOptions, options);
 			});
@@ -60,7 +60,7 @@ public class De implements Processor {
 
 				final PreprocessingOptions options = new PreprocessingOptions();
 				options.setParallelDegree(config.parallelDegree);
-				options.setMergeDuplicates(true);
+				options.setMergeDuplicates(config.mergeDuplicates);
 				options.setDeleteSource(DeleteMode.PROGRESSIVE); // delete files from temp
 
 				final HyphenationJoiner.German german = new HyphenationJoiner.German();

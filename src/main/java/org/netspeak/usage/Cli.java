@@ -71,6 +71,9 @@ public class Cli implements Runnable {
 			"If set to 0 or any negative number, all available processing cores will be used.",
 			"By default, all available processor cores will be used." })
 	Integer parallel;
+	@Option(names = { "--merge" }, description = { "Whether duplicate phrases in the data set will be merged.",
+			"Defaults to true." })
+	Boolean merge;
 
 	private void readConfig() throws Throwable {
 		if (config == null) {
@@ -131,6 +134,14 @@ public class Cli implements Runnable {
 				parallel = Integer.parseInt(p);
 			}
 		}
+
+		if (merge == null) {
+			p = props.getProperty("merge");
+			if (p != null) {
+				merge = Boolean.parseBoolean(p);
+			}
+		}
+
 	}
 
 	private PhraseSource toPhraseSource(Path input) throws IOException {
@@ -221,6 +232,7 @@ public class Cli implements Runnable {
 		config.maxNGram = maxNGram == null ? Integer.MAX_VALUE : maxNGram;
 		config.parallelDegree = parallel == null || parallel <= 0 ? Runtime.getRuntime().availableProcessors()
 				: parallel;
+		config.mergeDuplicates = merge == null ? true : merge;
 
 		lang.processor.process(config);
 
