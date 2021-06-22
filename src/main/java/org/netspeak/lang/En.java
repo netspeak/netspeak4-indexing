@@ -1,7 +1,6 @@
 package org.netspeak.lang;
 
 import java.nio.file.Path;
-import java.time.Instant;
 
 import org.netspeak.Util;
 import org.netspeak.preprocessing.Pipeline;
@@ -20,12 +19,8 @@ public class En implements Processor {
 
 	@Override
 	public void process(Config config) throws Exception {
-		final String id = String.valueOf(Instant.now().toEpochMilli());
-		final Path temp1 = config.temp.resolve("_temp1-" + id);
-		final Path temp2 = config.temp.resolve("_temp2-" + id);
-
-		Util.delete(temp1, true);
-		Util.delete(temp2, true);
+		final Path temp1 = config.newTempDir();
+		final Path temp2 = config.newTempDir();
 
 		Util.createEmptyDirectory(temp1);
 		Util.createEmptyDirectory(temp2);

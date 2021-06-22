@@ -212,9 +212,6 @@ public class Cli implements Runnable {
 		if (output == null) {
 			throw new IllegalArgumentException("--output option is not set by config file or argument.");
 		}
-		if (temp == null) {
-			throw new IllegalArgumentException("--temp option is not set by config file or argument.");
-		}
 		if (lang == null) {
 			throw new IllegalArgumentException("--lang option is not set by config file or argument.");
 		}
@@ -227,7 +224,8 @@ public class Cli implements Runnable {
 			}
 		}).collect(toList()));
 
-		final Config config = new Config(source, output, temp);
+		final Config config = new Config(source, output);
+		config.temp = temp;
 		config.lowercase = lowercase == null ? false : lowercase;
 		config.maxNGram = maxNGram == null ? Integer.MAX_VALUE : maxNGram;
 		config.parallelDegree = parallel == null || parallel <= 0 ? Runtime.getRuntime().availableProcessors()

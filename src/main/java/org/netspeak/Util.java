@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -20,6 +21,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
@@ -80,11 +82,29 @@ public final class Util {
 		}
 	}
 
+	public static Path getTempDir(Path parent) {
+		return parent.resolve("_temp-" + UUID.randomUUID().toString());
+	}
+
 	public static void createEmptyDirectory(Path dir) throws IOException {
+		createEmptyDirectory(dir, true);
+	}
+
+	public static void createEmptyDirectory(Path dir, boolean allowTemp) throws IOException {
 		requireNonNull(dir);
 		if (Files.isDirectory(dir)) {
-			if (Files.newDirectoryStream(dir).iterator().hasNext()) {
-				throw new AssertionError("Is not empty " + dir);
+			try (DirectoryStream<Path> files = Files.newDirectoryStream(dir)) {
+				if (allowTemp) {
+					for (final Path file : files) {
+						if (!Files.isDirectory(file) || !file.getFileName().toString().startsWith("_temp-")) {
+							throw new AssertionError("Is not empty " + dir);
+						}
+					}
+				} else {
+					if (files.iterator().hasNext()) {
+						throw new AssertionError("Is not empty " + dir);
+					}
+				}
 			}
 		} else {
 			Files.createDirectories(dir);

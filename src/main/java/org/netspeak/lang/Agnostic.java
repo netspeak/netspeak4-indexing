@@ -1,7 +1,6 @@
 package org.netspeak.lang;
 
 import java.nio.file.Path;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,10 +32,7 @@ public class Agnostic implements Processor {
 
 	@Override
 	public void process(Config config) throws Exception {
-		final String id = String.valueOf(Instant.now().toEpochMilli());
-		final Path temp1 = config.temp.resolve("_temp-" + id);
-
-		Util.delete(temp1, true);
+		final Path temp1 = config.newTempDir();
 
 		Util.createEmptyDirectory(temp1);
 
