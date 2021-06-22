@@ -9,7 +9,7 @@ RUN apt-get install git -y
 # Checkout a specific commit instead of a specific branch.
 # This makes builds deterministic.
 RUN git clone https://github.com/netspeak/netspeak4-indexing.git . \
-	&& git checkout e6c9b4842c0422fd6d92df95ad2f7b383c9c0ec2
+	&& git checkout 148720a10ec0b688862e7c5c208c16be49c50030
 
 # Build
 RUN chmod +x gradlew \
