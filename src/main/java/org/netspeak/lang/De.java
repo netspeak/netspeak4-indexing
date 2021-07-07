@@ -1,19 +1,22 @@
 package org.netspeak.lang;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 
 import org.netspeak.Util;
+import org.netspeak.preprocessing.PhraseMapper;
 import org.netspeak.preprocessing.Pipeline;
+import org.netspeak.preprocessing.Preprocessing;
 import org.netspeak.preprocessing.PreprocessingOptions;
 import org.netspeak.preprocessing.PreprocessingOptions.DeleteMode;
-import org.netspeak.preprocessing.items.HyphenationJoiner;
+import org.netspeak.preprocessing.items.GermanHyphenationJoiner;
 import org.netspeak.preprocessing.items.Operations;
-import org.netspeak.preprocessing.items.Operations.StandardOperationsOptions;
 import org.netspeak.preprocessing.mappers.ContractionMapper;
+import org.netspeak.preprocessing.mappers.StandardMappers;
 
 public class De implements Processor {
 
-	public static final Processor INSTANCE = new De();
+	public static final De INSTANCE = new De();
 
 	private De() {
 	}
@@ -33,35 +36,27 @@ public class De implements Processor {
 			pipeline.add(() -> {
 				final Path output = temp1;
 
-				final StandardOperationsOptions operationOptions = new StandardOperationsOptions();
-				operationOptions.setSuperBlacklist(Util.readResourceWordList("/super-blacklist.txt"));
-				operationOptions.setBlacklist(Util.readResourceWordList("/blacklist.txt"));
-				operationOptions.setBlacklistCombinations(4);
-				operationOptions.setMaxNGram(config.maxNGram);
-				operationOptions.setToLowerCase(config.lowercase);
+				final StandardMappers stdMappers = new StandardMappers();
+				stdMappers.setSuperBlacklist(Util.readResourceWordList("/super-blacklist.txt"));
+				stdMappers.setBlacklist(Util.readResourceWordList("/blacklist.txt"));
+				stdMappers.setBlacklistCombinations(4);
+				stdMappers.setMaxNGram(config.maxNGram);
+				stdMappers.setToLowerCase(config.lowercase);
 
-				operationOptions.getAdditionalMappers()
-						.add(new ContractionMapper(Util.readResourceWordList("/eng/contractions.txt")));
+				final ArrayList<PhraseMapper> mappers = new ArrayList<>(stdMappers.getMappers());
 
-				final PreprocessingOptions options = new PreprocessingOptions();
-				options.setParallelDegree(config.parallelDegree);
-				options.setMergeDuplicates(config.mergeDuplicates);
+				mappers.add(new ContractionMapper(Util.readResourceWordList("/eng/contractions.txt")));
 
-				return Operations.standardOperations(output, operationOptions, options);
+				return source -> Preprocessing.process(source, output, mappers, config.getPreprocessingOptions());
 			});
 
 			pipeline.add(() -> {
 				final Path output = temp2;
 
-				final PreprocessingOptions options = new PreprocessingOptions();
-				options.setParallelDegree(config.parallelDegree);
-				options.setMergeDuplicates(config.mergeDuplicates);
+				final PreprocessingOptions options = config.getPreprocessingOptions();
 				options.setDeleteSource(DeleteMode.PROGRESSIVE); // delete files from temp
 
-				final HyphenationJoiner.German german = new HyphenationJoiner.German();
-				german.setStopWordList(Util.readResourceWordList("/ger/stop-words.txt"));
-
-				return new HyphenationJoiner(german, output, options);
+				return new GermanHyphenationJoiner(Util.readResourceWordList("/ger/stop-words.txt"), output, options);
 			});
 
 			pipeline.add(Operations.moveTo(config.output));

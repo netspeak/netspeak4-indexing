@@ -7,16 +7,15 @@ import java.nio.file.Path;
 
 import org.netspeak.Util;
 import org.netspeak.preprocessing.PhraseSource;
+import org.netspeak.preprocessing.PreprocessingOptions;
 
-public final class Config {
+public final class Config extends MapperConfig {
 
 	public final PhraseSource source;
 	public final Path output;
 
 	public Path temp;
 	public int parallelDegree = 1;
-	public int maxNGram = Integer.MAX_VALUE;
-	public boolean lowercase = false;
 	public boolean mergeDuplicates = true;
 
 	public Config(PhraseSource source, Path output) {
@@ -32,5 +31,12 @@ public final class Config {
 	 */
 	public Path newTempDir() throws IOException {
 		return Util.getTempDir(temp == null ? output : temp);
+	}
+
+	public PreprocessingOptions getPreprocessingOptions() {
+		final PreprocessingOptions options = new PreprocessingOptions();
+		options.setParallelDegree(parallelDegree);
+		options.setMergeDuplicates(mergeDuplicates);
+		return options;
 	}
 }

@@ -1,72 +1,38 @@
 package org.netspeak.lang;
 
-import java.nio.file.Path;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import org.netspeak.Util;
-import org.netspeak.preprocessing.Pipeline;
-import org.netspeak.preprocessing.PreprocessingOptions;
-import org.netspeak.preprocessing.PreprocessingOptions.DeleteMode;
-import org.netspeak.preprocessing.items.HyphenationJoiner;
-import org.netspeak.preprocessing.items.Operations;
-import org.netspeak.preprocessing.items.Operations.StandardOperationsOptions;
+import org.netspeak.preprocessing.PhraseMapper;
+import org.netspeak.preprocessing.mappers.ContractionMapper;
+import org.netspeak.preprocessing.mappers.EnglishHyphenJoinMapper;
+import org.netspeak.preprocessing.mappers.StandardMappers;
 
-public class En implements Processor {
+public class En implements Processor, SingleMapProcessor {
 
-	public static final Processor INSTANCE = new En();
+	public static final En INSTANCE = new En();
 
 	private En() {
 	}
 
 	@Override
-	public void process(Config config) throws Exception {
-		final Path temp1 = config.newTempDir();
-		final Path temp2 = config.newTempDir();
+	public Collection<PhraseMapper> getMappers(MapperConfig config) throws IOException {
+		final StandardMappers stdMappers = new StandardMappers();
+		stdMappers.setSuperBlacklist(Util.readResourceWordList("/super-blacklist.txt"));
+		stdMappers.setBlacklist(Util.readResourceWordList("/blacklist.txt"));
+		stdMappers.setBlacklistCombinations(4);
+		stdMappers.setMaxNGram(config.maxNGram);
+		stdMappers.setToLowerCase(config.lowercase);
 
-		Util.createEmptyDirectory(temp1);
-		Util.createEmptyDirectory(temp2);
+		final List<PhraseMapper> mappers = new ArrayList<>(stdMappers.getMappers());
 
-		try {
+		mappers.add(new EnglishHyphenJoinMapper());
+		mappers.add(new ContractionMapper(Util.readResourceWordList("/eng/contractions.txt")));
 
-			final Pipeline pipeline = new Pipeline();
-
-			pipeline.add(() -> {
-				final Path output = temp1;
-
-				final StandardOperationsOptions operationOptions = new StandardOperationsOptions();
-				operationOptions.setSuperBlacklist(Util.readResourceWordList("/super-blacklist.txt"));
-				operationOptions.setBlacklist(Util.readResourceWordList("/blacklist.txt"));
-				operationOptions.setBlacklistCombinations(4);
-				operationOptions.setMaxNGram(config.maxNGram);
-				operationOptions.setToLowerCase(config.lowercase);
-
-				final PreprocessingOptions options = new PreprocessingOptions();
-				options.setParallelDegree(config.parallelDegree);
-				options.setMergeDuplicates(config.mergeDuplicates);
-
-				return Operations.standardOperations(output, operationOptions, options);
-			});
-
-			pipeline.add(() -> {
-				final Path output = temp2;
-
-				final PreprocessingOptions options = new PreprocessingOptions();
-				options.setParallelDegree(config.parallelDegree);
-				options.setMergeDuplicates(config.mergeDuplicates);
-				options.setDeleteSource(DeleteMode.PROGRESSIVE); // delete files from temp
-
-				final HyphenationJoiner.English english = new HyphenationJoiner.English();
-
-				return new HyphenationJoiner(english, output, options);
-			});
-
-			pipeline.add(Operations.moveTo(config.output));
-
-			pipeline.apply(config.source);
-
-		} finally {
-			Util.delete(temp1, true);
-			Util.delete(temp2, true);
-		}
+		return mappers;
 	}
 
 }

@@ -1,15 +1,10 @@
 package org.netspeak.lang;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
-import org.netspeak.Util;
 import org.netspeak.preprocessing.PhraseMapper;
-import org.netspeak.preprocessing.Pipeline;
-import org.netspeak.preprocessing.Preprocessing;
-import org.netspeak.preprocessing.PreprocessingOptions;
-import org.netspeak.preprocessing.items.Operations;
 import org.netspeak.preprocessing.mappers.PhraseMappers;
 
 /**
@@ -23,46 +18,23 @@ import org.netspeak.preprocessing.mappers.PhraseMappers;
  *
  * @author Michael
  */
-public class Agnostic implements Processor {
+public class Agnostic implements Processor, SingleMapProcessor {
 
-	public static final Processor INSTANCE = new Agnostic();
+	public static final Agnostic INSTANCE = new Agnostic();
 
 	private Agnostic() {
 	}
 
 	@Override
-	public void process(Config config) throws Exception {
-		final Path temp1 = config.newTempDir();
-
-		Util.createEmptyDirectory(temp1);
-
-		try {
-
-			final Pipeline pipeline = new Pipeline();
-
-			pipeline.add(inputSource -> {
-				final PreprocessingOptions options = new PreprocessingOptions();
-				options.setParallelDegree(config.parallelDegree);
-				options.setMergeDuplicates(config.mergeDuplicates);
-
-				final List<PhraseMapper> mappers = new ArrayList<>();
-				if (config.maxNGram < Integer.MAX_VALUE) {
-					mappers.add(PhraseMappers.maxNGram(config.maxNGram));
-				}
-				if (config.lowercase) {
-					mappers.add(PhraseMappers.toLowerCase());
-				}
-
-				return Preprocessing.process(inputSource, temp1, mappers, options);
-			});
-
-			pipeline.add(Operations.moveTo(config.output));
-
-			pipeline.apply(config.source);
-
-		} finally {
-			Util.delete(temp1, true);
+	public Collection<PhraseMapper> getMappers(MapperConfig config) {
+		final List<PhraseMapper> mappers = new ArrayList<>();
+		if (config.maxNGram < Integer.MAX_VALUE) {
+			mappers.add(PhraseMappers.maxNGram(config.maxNGram));
 		}
+		if (config.lowercase) {
+			mappers.add(PhraseMappers.toLowerCase());
+		}
+		return mappers;
 	}
 
 }
