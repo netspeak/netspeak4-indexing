@@ -24,8 +24,6 @@ import org.netspeak.preprocessing.mappers.VocabularyExtractor;
  * <p>
  * The second phase is specific to the joiner set. Generally, it will try to
  * normalize and, where possible, join hyphenated words.
- *
- * @see German
  */
 public class GermanHyphenationJoiner implements PipelineItem {
 

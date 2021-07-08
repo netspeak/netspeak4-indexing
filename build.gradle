@@ -14,12 +14,12 @@ allprojects {
     compileJava.options.encoding = "UTF-8"
     compileTestJava.options.encoding = "UTF-8"
     javadoc.options.encoding = 'UTF-8'
+    javadoc.options.addStringOption('Xdoclint:none', '-quiet')
 
     // Declare global dependencies
     dependencies {
         implementation group: 'org.apache.commons', name: 'commons-compress', version: '1.19'
         implementation 'info.picocli:picocli:4.5.2'
-        
 
         testImplementation 'junit:junit:4.12'
     }
