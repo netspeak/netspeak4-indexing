@@ -27,7 +27,7 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
-@Command(name = "netspeak4indexing", descriptionHeading = "%n", description = {
+@Command(name = "netspeak4-indexing", descriptionHeading = "%n", description = {
 		"A CLI for the Netspeak 4 data preporcessing and indexing process." }, optionListHeading = "%nOptions:%n", mixinStandardHelpOptions = true)
 public class Cli implements Runnable {
 
