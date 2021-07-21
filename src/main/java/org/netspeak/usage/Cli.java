@@ -227,7 +227,7 @@ public class Cli implements Runnable {
 	}
 
 	private void runHadoop() throws Throwable {
-		if (merge == false) {
+		if (merge != null && merge == false) {
 			throw new IllegalArgumentException(
 					"When running using Hadoop, duplicates will always be merged. This conflicts with the `merge=false` given.");
 		}
