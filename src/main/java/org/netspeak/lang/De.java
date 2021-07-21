@@ -39,7 +39,6 @@ public class De implements Processor {
 				final StandardMappers stdMappers = new StandardMappers();
 				stdMappers.setSuperBlacklist(Util.readResourceWordList("/super-blacklist.txt"));
 				stdMappers.setBlacklist(Util.readResourceWordList("/blacklist.txt"));
-				stdMappers.setBlacklistCombinations(4);
 				stdMappers.setMaxNGram(config.maxNGram);
 				stdMappers.setToLowerCase(config.lowercase);
 

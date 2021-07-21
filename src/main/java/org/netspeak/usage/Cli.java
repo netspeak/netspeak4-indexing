@@ -14,11 +14,13 @@ import java.util.List;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
+import org.netspeak.hadoop.Merge;
 import org.netspeak.io.GoogleBooksCsvReader;
 import org.netspeak.lang.Agnostic;
 import org.netspeak.lang.Config;
 import org.netspeak.lang.De;
 import org.netspeak.lang.En;
+import org.netspeak.lang.MapperConfig;
 import org.netspeak.lang.Processor;
 import org.netspeak.preprocessing.PhraseSource;
 import org.netspeak.preprocessing.SimplePhraseSourceFile;
@@ -48,18 +50,19 @@ public class Cli implements Runnable {
 			"---" })
 	Lang lang;
 
-	@Option(names = { "-i", "--input" }, type = Path.class, arity = "1..*", description = {
+	@Option(names = { "-i", "--input" }, type = String.class, arity = "1..*", description = {
 			"A list of input directories.", "The file and directory formats will be automatically detected.",
 			"The given files will not be modified." })
-	List<Path> input;
+	List<String> input;
 	@Option(names = { "-o", "--output" }, description = { "The output path of the preprocessing step.",
 			"The given directory has to be either empty or not exist." })
-	Path output;
+	String output;
 	@Option(names = { "-t", "--temp" }, description = { "A temporary path used to store temporary files.",
 			"This path should point to a fast SSD."
 					+ " Most processing and IO-heavy operations will be done in the temp directories."
-					+ " All temporary files will be deleted during or at the end of execution." })
-	Path temp;
+					+ " All temporary files will be deleted during or at the end of execution.",
+			"This option will be ignored when run with Hadoop." })
+	String temp;
 
 	@Option(names = { "--lowercase" }, description = { "Whether the whole data set will be lowercased." })
 	Boolean lowercase;
@@ -74,6 +77,9 @@ public class Cli implements Runnable {
 	@Option(names = { "--merge" }, description = { "Whether duplicate phrases in the data set will be merged.",
 			"Defaults to true." })
 	Boolean merge;
+	@Option(names = { "--hadoop" }, description = { "Whether to do the given operation on a Hadoop cluster.",
+			"Defaults to false." })
+	Boolean hadoop;
 
 	private void readConfig() throws Throwable {
 		if (config == null) {
@@ -95,7 +101,7 @@ public class Cli implements Runnable {
 		if (input == null) {
 			p = props.getProperty("input");
 			if (p != null) {
-				input = Arrays.stream(p.split(";")).map(String::trim).filter(s -> !s.isEmpty()).map(Paths::get)
+				input = Arrays.stream(p.split(";")).map(String::trim).filter(s -> !s.isEmpty())
 						.collect(Collectors.toList());
 			}
 		}
@@ -103,14 +109,14 @@ public class Cli implements Runnable {
 		if (output == null) {
 			p = props.getProperty("output");
 			if (p != null) {
-				output = Paths.get(p);
+				output = p;
 			}
 		}
 
 		if (temp == null) {
 			p = props.getProperty("temp");
 			if (p != null) {
-				temp = Paths.get(p);
+				temp = p;
 			}
 		}
 
@@ -200,6 +206,39 @@ public class Cli implements Runnable {
 		return PhraseSource.fromFiles(files.stream().map(SimplePhraseSourceFile::new).collect(Collectors.toList()));
 	}
 
+	private void runLocal() throws Throwable {
+		final PhraseSource source = PhraseSource.combine(input.stream().map(p -> {
+			try {
+				return toPhraseSource(Paths.get(p));
+			} catch (final Exception e) {
+				throw new RuntimeException(e);
+			}
+		}).collect(toList()));
+
+		final Config config = new Config(source, Paths.get(output));
+		config.temp = Paths.get(temp);
+		config.lowercase = lowercase == null ? false : lowercase;
+		config.maxNGram = maxNGram == null ? Integer.MAX_VALUE : maxNGram;
+		config.parallelDegree = parallel == null || parallel <= 0 ? Runtime.getRuntime().availableProcessors()
+				: parallel;
+		config.mergeDuplicates = merge == null ? true : merge;
+
+		lang.processor.process(config);
+	}
+
+	private void runHadoop() throws Throwable {
+		if (merge != null && merge == false) {
+			throw new IllegalArgumentException(
+					"When running using Hadoop, duplicates will always be merged. This conflicts with the `merge=false` given.");
+		}
+
+		final MapperConfig config = new MapperConfig();
+		config.lowercase = lowercase == null ? false : lowercase;
+		config.maxNGram = maxNGram == null ? Integer.MAX_VALUE : maxNGram;
+
+		Merge.run(input, output, lang.name(), config);
+	}
+
 	private void runWithExecption() throws Throwable {
 		readConfig();
 
@@ -216,23 +255,11 @@ public class Cli implements Runnable {
 			throw new IllegalArgumentException("--lang option is not set by config file or argument.");
 		}
 
-		final PhraseSource source = PhraseSource.combine(input.stream().map(p -> {
-			try {
-				return toPhraseSource(p);
-			} catch (final Exception e) {
-				throw new RuntimeException(e);
-			}
-		}).collect(toList()));
-
-		final Config config = new Config(source, output);
-		config.temp = temp;
-		config.lowercase = lowercase == null ? false : lowercase;
-		config.maxNGram = maxNGram == null ? Integer.MAX_VALUE : maxNGram;
-		config.parallelDegree = parallel == null || parallel <= 0 ? Runtime.getRuntime().availableProcessors()
-				: parallel;
-		config.mergeDuplicates = merge == null ? true : merge;
-
-		lang.processor.process(config);
+		if (hadoop == true) {
+			runHadoop();
+		} else {
+			runLocal();
+		}
 
 		System.out.println("Done.");
 	}

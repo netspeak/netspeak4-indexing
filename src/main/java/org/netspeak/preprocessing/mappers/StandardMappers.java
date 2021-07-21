@@ -19,11 +19,10 @@ public class StandardMappers {
 	 */
 	boolean toLowerCase = false;
 	/**
-	 * All phrases with at least one word which can be constructed from at most
-	 * {@link #blacklistCombinations} many blacklisted word will be removed.
+	 * All phrases with at least one word which can be constructed from blacklisted
+	 * word will be removed.
 	 */
 	Collection<String> blacklist = null;
-	int blacklistCombinations = 4;
 	/**
 	 * @see PhraseMappers#superBlacklist(Iterable)
 	 */
@@ -35,10 +34,6 @@ public class StandardMappers {
 
 	public void setBlacklist(Collection<String> blacklist) {
 		this.blacklist = blacklist;
-	}
-
-	public void setBlacklistCombinations(int blacklistCombinations) {
-		this.blacklistCombinations = blacklistCombinations;
 	}
 
 	public void setSuperBlacklist(Path superBlacklist) throws IOException {
@@ -79,7 +74,7 @@ public class StandardMappers {
 		mappers.add(PhraseMappers.joinWordsWithLeadingApostrophe());
 
 		if (blacklist != null) {
-			mappers.add(PhraseMappers.blacklist(blacklist, blacklistCombinations));
+			mappers.add(PhraseMappers.blacklistRepeated(blacklist));
 		}
 		if (maxNGram < Integer.MAX_VALUE) {
 			mappers.add(PhraseMappers.maxNGram(maxNGram));
