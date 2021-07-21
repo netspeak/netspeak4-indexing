@@ -116,6 +116,7 @@ public class Merge {
 		job.setReducerClass(LongSumReducer.class);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(LongWritable.class);
+		job.setNumReduceTasks(1000);
 
 		FileInputFormat.setInputPaths(job, input.stream().map(Path::new).toArray(Path[]::new));
 		FileOutputFormat.setOutputPath(job, new Path(outputDir));
