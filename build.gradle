@@ -1,6 +1,16 @@
 // Apply plugins
-apply plugin: 'java'
-apply plugin: 'application'
+
+plugins {
+  // adds './gradlew shadowjar', which creates a fat Jar (includes all dependencies) in build/libs/
+  id 'com.github.johnrengelman.shadow' version '4.0.2'
+  // Needed for all Java projects
+  id 'java'
+  id 'application'
+}
+
+shadowJar {
+    transform(com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer)
+}
 
 // Basic configuration and settings for all (sub-)projects
 allprojects {
