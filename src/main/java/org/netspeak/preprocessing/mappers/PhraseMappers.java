@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -93,7 +92,11 @@ public final class PhraseMappers {
 	 * @return
 	 */
 	public static PhraseMapper blacklist(final Collection<String> words) {
-		return PhraseMapper.rename(blacklist(words, 1));
+		final HashSet<String> set = new HashSet<>(words);
+		set.remove(null);
+		set.remove("");
+
+		return PhraseMapper.rename(filterByWords(w -> !set.contains(w)));
 	}
 
 	/**
@@ -135,50 +138,51 @@ public final class PhraseMappers {
 	 * Returns a new {@link PhraseMapper} that removes phrases which contain at
 	 * least one word that is contained in a given blacklist vocabulary.
 	 * <p>
-	 * Phrases which contains a word which can be constructed by concatenating
-	 * {@code <= repeating} many words from the blacklist will also be removed. I.e.
-	 * if {@code "} and {@code ?} are in the blacklist and {@code repeating} is 3,
-	 * then {@code """}, {@code "?"}, {@code "?}, and {@code ??} will all be
-	 * removed.
-	 * <p>
-	 * Please note that the blacklist will consume <b>{@code O(n ** repeat)}</b>
-	 * many bytes of memory where {@code n} is the number of blacklist entries.
+	 * Phrases which contain a word which can be constructed by concatenating
+	 * blacklist words will also be removed. I.e. if {@code "} and {@code ?} are in
+	 * the blacklist, then {@code """}, {@code "?"}, {@code "?}, and {@code ??} will
+	 * all be removed.
 	 *
 	 * @param words
 	 * @return
 	 */
-	public static PhraseMapper blacklist(final Collection<String> words, int repeat) {
-		HashSet<String> tempBlacklist = new HashSet<>(words);
-		// just to be safe
-		tempBlacklist.remove(null);
-		tempBlacklist.remove("");
+	public static PhraseMapper blacklistRepeated(final Collection<String> words) {
+		// create a regex for the words
 
-		if (repeat > 1) {
-			tempBlacklist = new HashSet<>(getAllCombinations(tempBlacklist, repeat));
+		// split by length
+		final ArrayList<String> singleChar = new ArrayList<>();
+		final ArrayList<String> multipleChar = new ArrayList<>();
+		for (final String word : words) {
+			if (word == null || word.isEmpty()) {
+				// skip
+			} else if (word.length() == 1) {
+				singleChar.add(word);
+			} else {
+				multipleChar.add(word);
+			}
 		}
 
-		// thanks Java
-		final Set<String> blacklist = tempBlacklist;
+		final StringBuilder sb = new StringBuilder();
+		sb.append("[");
+		for (final String singleCharWord : singleChar) {
+			appendLiteral(sb, singleCharWord);
+		}
+		sb.append("]");
 
-		return PhraseMapper.rename(filterByWords(w -> !blacklist.contains(w)));
+		for (final String word : multipleChar) {
+			sb.append("|");
+			appendLiteral(sb, word);
+		}
+
+		final Pattern regex = Pattern.compile("(?:" + sb.toString() + ")+");
+
+		return PhraseMapper.rename(filterByWords(w -> !regex.matcher(w).matches()));
 	}
 
-	private static List<String> getAllCombinations(Collection<String> words, int repeat) {
-		final ArrayList<String> combinations = new ArrayList<>((int) Math.pow(words.size(), repeat));
-		combinations.addAll(words);
-
-		int start = 0;
-		for (; repeat > 1; repeat--) {
-			final int size = combinations.size();
-			for (int i = start; i < size; i++) {
-				for (final String word : words) {
-					combinations.add(combinations.get(i) + word);
-				}
-			}
-			start = size;
+	private static void appendLiteral(StringBuilder sb, String value) {
+		for (final char c : value.toCharArray()) {
+			sb.append("\\u").append(String.format("%04x", (int) c));
 		}
-
-		return combinations;
 	}
 
 	/**

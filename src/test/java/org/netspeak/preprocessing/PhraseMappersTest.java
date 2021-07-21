@@ -15,25 +15,25 @@ public class PhraseMappersTest {
 
 	private void phraseMapperTest(PhraseMapper mapper, Collection<String> unchanged, Collection<String> removed,
 			Map<String, String> changed) {
-		String name = mapper.getName();
+		final String name = mapper.getName();
 
 		if (unchanged != null) {
-			for (String expected : unchanged) {
-				String actual = mapper.map(expected, 100);
+			for (final String expected : unchanged) {
+				final String actual = mapper.map(expected, 100);
 				assertEquals("Expected unchanged for " + name, expected, actual);
 			}
 		}
 
 		if (removed != null) {
-			for (String expected : removed) {
-				String actual = mapper.map(expected, 100);
+			for (final String expected : removed) {
+				final String actual = mapper.map(expected, 100);
 				assertEquals("Expected removed for " + name, null, actual);
 			}
 		}
 
 		if (changed != null) {
-			for (Map.Entry<String, String> transform : changed.entrySet()) {
-				String actual = mapper.map(transform.getKey(), 100);
+			for (final Map.Entry<String, String> transform : changed.entrySet()) {
+				final String actual = mapper.map(transform.getKey(), 100);
 				assertEquals("Expected changed for " + name, transform.getValue(), actual);
 			}
 		}
@@ -41,8 +41,8 @@ public class PhraseMappersTest {
 
 	@Test
 	public void blacklist() {
-		Set<String> blacklistedWords = new HashSet<>();
-		for (String word : ". - ( ) \" '".split(" ")) {
+		final Set<String> blacklistedWords = new HashSet<>();
+		for (final String word : ". - ( ) \" '".split(" ")) {
 			blacklistedWords.add(word);
 		}
 
@@ -63,7 +63,7 @@ public class PhraseMappersTest {
 		sharedRemoved.add("foo - bar");
 
 		{
-			final PhraseMapper mapper = PhraseMappers.blacklist(blacklistedWords, 1);
+			final PhraseMapper mapper = PhraseMappers.blacklist(blacklistedWords);
 
 			final Collection<String> unchanged = new ArrayList<>(sharedUnchanged);
 			unchanged.add("()");
@@ -73,14 +73,15 @@ public class PhraseMappersTest {
 			phraseMapperTest(mapper, unchanged, removed, null);
 		}
 		{
-			final PhraseMapper mapper = PhraseMappers.blacklist(blacklistedWords, 4);
+			final PhraseMapper mapper = PhraseMappers.blacklistRepeated(blacklistedWords);
 
 			final Collection<String> unchanged = new ArrayList<>();
-			unchanged.add("()()-");
+			unchanged.add("()()a");
 
 			final Collection<String> removed = new ArrayList<>();
 			removed.add("()()");
 			removed.add("-.-.");
+			removed.add("-.-.-.-.-.-.-.-.-.-");
 			removed.add("-.-. foo");
 			removed.add("foo -.-. foo");
 
@@ -90,8 +91,8 @@ public class PhraseMappersTest {
 
 	@Test
 	public void superBlacklist() {
-		Set<String> blacklistedWords = new HashSet<>();
-		for (String word : ". - ( ) \" '".split(" ")) {
+		final Set<String> blacklistedWords = new HashSet<>();
+		for (final String word : ". - ( ) \" '".split(" ")) {
 			blacklistedWords.add(word);
 		}
 
